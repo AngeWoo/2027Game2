@@ -416,7 +416,8 @@ function startTimer(sec){
 }
 
 function answer(idx){
-  if (G.locked||G.paused) return; G.locked=true;
+  if (G.locked) return; G.locked=true;
+  if (G.paused){ G.timeLeft=Math.max(0,pausedLeft/1000); setPaused(false); }
   cancelAnimationFrame(timerRAF);
   const q=G.q, btns=[...$('#options').children], ok= idx>=0 && q.options[idx].correct;
   btns.forEach((b,i)=>{ b.disabled=true; b.style.animationDelay='0s';
