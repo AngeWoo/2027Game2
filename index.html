@@ -161,7 +161,16 @@ main{position:relative;z-index:10;min-height:100vh;min-height:100dvh;display:fle
 @keyframes edge{to{background-position:-300% 0}}
 .q-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
 .q-type{font-size:.78rem;letter-spacing:.2em;padding:5px 12px;border-radius:999px;background:rgba(94,231,255,.12);border:1px solid rgba(94,231,255,.4);color:var(--cyan)}
-.timer{position:relative;width:58px;height:58px;flex:none}
+.timer{position:relative;width:58px;height:58px;flex:none;padding:0;border:0;background:none;color:inherit;font:inherit;cursor:pointer;border-radius:50%;transition:transform .2s}
+.timer:hover{transform:scale(1.08)}
+.timer:active{transform:scale(.94)}
+.timer:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+.timer .ico{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);font-size:.62rem;line-height:1;padding:2px 5px;border-radius:6px;background:rgba(10,10,40,.9);border:1px solid var(--glass-b);color:var(--muted);white-space:nowrap}
+.timer.paused .bar{stroke:var(--cyan);filter:drop-shadow(0 0 6px var(--cyan))}
+.timer.paused .num{color:var(--cyan);animation:blink 1.2s infinite}
+.timer.paused .ico{color:var(--cyan);border-color:var(--cyan)}
+#scr-game.paused .options{pointer-events:none}
+
 .timer svg{width:100%;height:100%;transform:rotate(-90deg)}
 .timer circle{fill:none;stroke-width:5}
 .timer .track{stroke:rgba(255,255,255,.1)}
@@ -356,7 +365,7 @@ footer.src{position:relative;margin-top:22px;font-size:.72rem;color:#6d7299;text
         </div>
       </div>
       <div class="meta" id="meta"></div>
-      <p class="howto">連續答對 5 題可回復 1 顆心 ♥<span class="br"></span>　答得越快、連擊越高，分數越多！<span class="kbd-only"><br>鍵盤：<b>1 / 2 / 3</b> 作答，<b>Enter</b> 下一題</span></p>
+      <p class="howto">連續答對 5 題可回復 1 顆心 ♥<span class="br"></span>　答得越快、連擊越高，分數越多！<span class="kbd-only"><br>鍵盤：<b>1 / 2 / 3</b> 作答，<b>Enter</b> 下一題，<b>P</b> 暫停</span></p>
     </div>
   </section>
 
@@ -382,10 +391,11 @@ footer.src{position:relative;margin-top:22px;font-size:.72rem;color:#6d7299;text
       <div class="qcard" id="qcard">
         <div class="q-top">
           <span class="q-type" id="q-type">年代推理</span>
-          <div class="timer" id="timer">
+          <button type="button" class="timer" id="timer" title="點一下暫停／繼續計時">
             <svg viewBox="0 0 60 60"><circle class="track" cx="30" cy="30" r="26"/><circle class="bar" id="timer-bar" cx="30" cy="30" r="26"/></svg>
             <div class="num" id="timer-num">20</div>
-          </div>
+            <span class="ico" id="timer-ico">⏸ 暫停</span>
+          </button>
         </div>
         <div class="q-date" id="q-date"></div>
         <div class="q-prompt" id="q-prompt"></div>
@@ -431,6 +441,6 @@ footer.src{position:relative;margin-top:22px;font-size:.72rem;color:#6d7299;text
 <div id="banner"><div class="wheel" data-wheel></div><div class="b-inner" id="banner-inner"></div></div>
 
 <script src="data-fallback.js?v=1"></script>
-<script src="game.js?v=15"></script>
+<script src="game.js?v=17"></script>
 </body>
 </html>

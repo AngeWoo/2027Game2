@@ -387,12 +387,24 @@ function nextQuestion(){
   startTimer(G.mode==='full'?FULL_TIME:STAGES[G.stage].time);
 }
 
+let timerStep=null, pausedLeft=0;
+function setPaused(p){
+  G.paused=p;
+  $('#scr-game').classList.toggle('paused',p); $('#timer').classList.toggle('paused',p);
+  $('#timer-ico').textContent= p ? '▶ 繼續' : '⏸ 暫停';
+}
+function togglePause(){
+  if (G.locked||G.over||!timerStep) return;
+  sfx.click();
+  if (!G.paused){ cancelAnimationFrame(timerRAF); pausedLeft=timerEnd-performance.now(); setPaused(true); }
+  else { timerEnd=performance.now()+pausedLeft; setPaused(false); timerRAF=requestAnimationFrame(timerStep); }
+}
 function startTimer(sec){
-  cancelAnimationFrame(timerRAF);
+  cancelAnimationFrame(timerRAF); setPaused(false);
   const C=2*Math.PI*26, bar=$('#timer-bar'), num=$('#timer-num'), tm=$('#timer');
   bar.style.strokeDasharray=C; tm.classList.remove('warn');
   timerEnd=performance.now()+sec*1000+600; lastTick=sec+1;
-  (function step(t){
+  (timerStep=function step(t){
     const left=Math.max(0,(timerEnd-t)/1000); G.timeLeft=left;
     const whole=Math.ceil(Math.min(left,sec));
     num.textContent=whole; bar.style.strokeDashoffset=C*(1-Math.min(1,left/sec));
@@ -404,7 +416,7 @@ function startTimer(sec){
 }
 
 function answer(idx){
-  if (G.locked) return; G.locked=true;
+  if (G.locked||G.paused) return; G.locked=true;
   cancelAnimationFrame(timerRAF);
   const q=G.q, btns=[...$('#options').children], ok= idx>=0 && q.options[idx].correct;
   btns.forEach((b,i)=>{ b.disabled=true; b.style.animationDelay='0s';
@@ -464,7 +476,7 @@ function stageClear(){
 }
 
 function finish(cleared){
-  G.locked=true; G.over=true; cancelAnimationFrame(timerRAF);
+  G.locked=true; G.over=true; cancelAnimationFrame(timerRAF); setPaused(false);
   const acc=G.answered?Math.round(G.correct/G.answered*100):0;
   const full=G.mode==='full';
   const allDone = full ? G.qi>=G.queue.length : cleared;
@@ -515,6 +527,7 @@ $('#btn-full').onclick=()=>startGame('full');
 $('#btn-sound').onclick=()=>{ muted=!muted; store.set('muted',muted?'1':'0'); renderTitle(); sfx.click(); };
 $('#btn-reload').onclick=async()=>{ show('scr-loading'); await loadData(); renderTitle(); show('scr-title'); };
 $('#btn-next').onclick=next;
+$('#timer').onclick=togglePause;
 if (fsSupported) $('#btn-fs').onclick=toggleFS; else $('#btn-fs').style.display='none';
 $('#btn-quit').onclick=()=>{ if (G.over) return; if (confirm('確定要結束這次挑戰嗎？')){ cancelAnimationFrame(timerRAF); finish(false); } };
 $('#btn-again').onclick=()=>startGame(G.mode, G.startStage||0);
@@ -522,7 +535,8 @@ $('#btn-home').onclick=()=>{ sfx.click(); renderTitle(); show('scr-title'); };
 addEventListener('keydown',ev=>{
   if (!$('#scr-game').classList.contains('active') || $('#banner').classList.contains('show')) return;
   const k=ev.key.toLowerCase(), map={'1':0,'2':1,'3':2,a:0,b:1,c:2};
-  if (!G.locked && k in map){ answer(map[k]); ev.preventDefault(); }
+  if (!G.locked && (k==='p'||k===' ')){ togglePause(); ev.preventDefault(); }
+  else if (!G.locked && k in map){ answer(map[k]); ev.preventDefault(); }
   else if (G.locked && (k==='enter'||k===' ')){ next(); ev.preventDefault(); }
 });
 
