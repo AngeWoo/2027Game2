@@ -4,14 +4,14 @@
    ========================================================= */
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSELNOgRozrKO1bscsHe6doF8rH9-wSPYgvkhR5xXGhHKYvKoiXnlEC8YR3G5pPwQ2YFOksnlxYAQx-/pub?gid=0&single=true&output=csv';
 const STAGES = [
-  { name:'草創之始', from:0,    to:1949, time:35, types:['year','event','blank'] },
-  { name:'苑基開展', from:1950, to:1969, time:32, types:['year','event','blank'] },
-  { name:'法流相承', from:1970, to:1989, time:30, types:['year','event','blank','date'] },
-  { name:'繼往開來', from:1990, to:2009, time:28, types:['year','event','blank','date'] },
-  { name:'永恆燈火', from:2010, to:9999, time:25, types:['year','event','blank','date'] },
+  { name:'草創之始', from:0,    to:1949, time:60, types:['year','event','blank'] },
+  { name:'苑基開展', from:1950, to:1969, time:57, types:['year','event','blank'] },
+  { name:'法流相承', from:1970, to:1989, time:55, types:['year','event','blank','date'] },
+  { name:'繼往開來', from:1990, to:2009, time:52, types:['year','event','blank','date'] },
+  { name:'永恆燈火', from:2010, to:9999, time:50, types:['year','event','blank','date'] },
 ];
 const NUMS = ['一','二','三','四','五','六','七','八','九','十'];
-const Q_PER_STAGE = 8, START_LIVES = 3, MAX_LIVES = 5, FULL_TIME = 35;
+const Q_PER_STAGE = 8, START_LIVES = 3, MAX_LIVES = 5, FULL_TIME = 60;
 const TYPE_LABEL = { year:'年代推理', event:'時光定格', blank:'填空解謎', date:'精準日期' };
 
 const $ = s => document.querySelector(s);
@@ -205,6 +205,7 @@ function resize(){
   DPR=Math.min(devicePixelRatio||1, innerWidth<600?1.5:2); W=innerWidth; H=innerHeight;
   for (const c of [bg,fx]){ c.width=W*DPR; c.height=H*DPR; }
   bctx.setTransform(DPR,0,0,DPR,0,0); fctx.setTransform(DPR,0,0,DPR,0,0);
+  bctx.clearRect(0,0,W,H); fctx.clearRect(0,0,W,H);
 }
 // 預先畫好雪花圖樣：柔光圓點與六角雪晶
 function sprite(size,draw){ const c=document.createElement('canvas'); c.width=c.height=size; draw(c.getContext('2d'),size/2); return c; }
@@ -270,7 +271,10 @@ function drawFX(){
   }
   fctx.globalAlpha=1;
 }
-(function loop(){ drawBG(); drawFX(); requestAnimationFrame(loop); })();
+let drawn=false;
+(function loop(){ drawBG(); drawFX();
+  if (!drawn){ drawn=true; requestAnimationFrame(()=>{ bg.classList.add('ready'); fx.classList.add('ready'); }); }
+  requestAnimationFrame(loop); })();
 addEventListener('resize',resize); addEventListener('orientationchange',()=>setTimeout(resize,300));
 if (window.visualViewport) visualViewport.addEventListener('resize',resize);
 resize();
@@ -318,9 +322,9 @@ let timerRAF=0, timerEnd=0, lastTick=0;
 
 function stageEntries(i){ const s=STAGES[i]; return ENTRIES.filter(e=>e.y>=s.from&&e.y<=s.to); }
 
-function startGame(mode){
+function startGame(mode, fromStage=0){
   sfx.click(); if (isTouch) enterFS();
-  Object.assign(G,{ mode, stage:0, qi:0, lives:START_LIVES, score:0, combo:0, maxCombo:0, correct:0, answered:0, wrong:[], over:false });
+  Object.assign(G,{ mode, startStage:fromStage, stage:fromStage, qi:0, lives:START_LIVES, score:0, combo:0, maxCombo:0, correct:0, answered:0, wrong:[], over:false });
   $('#hud-score').textContent='0';
   if (mode==='full'){
     G.queue=shuffle(ENTRIES.slice()); G.total=G.queue.length;
@@ -328,7 +332,7 @@ function startGame(mode){
     banner(`<div class="b-kicker">ALL RECORDS</div><div class="b-title">${slamLetters('題庫')}</div><div class="b-sub">大 挑 戰</div><div class="b-years">共 ${G.total} 題　隨時可結束</div>`).then(nextQuestion);
     sfx.stage();
   } else {
-    show('scr-game'); enterStage(0);
+    show('scr-game'); enterStage(fromStage);
   }
 }
 function enterStage(i){
@@ -348,7 +352,7 @@ function renderHUD(){
   $('#hud-count').textContent=`第 ${Math.min(G.qi+1,n)} / ${n} 題`;
   $('#hud-hearts').innerHTML= full ? '<span class="inf">∞ 練習模式</span>'
     : Array.from({length:Math.max(G.lives,START_LIVES)},(_,i)=>`<span class="h ${i<G.lives?'':'lost'}">♥</span>`).join('');
-  $('#hud-dots').innerHTML= full ? '' : STAGES.map((_,i)=>`<i class="${i<G.stage?'done':i===G.stage?'cur':''}" title="第${NUMS[i]}關・${STAGES[i].name}"></i>`).join('');
+  $('#hud-dots').innerHTML= full ? '' : STAGES.map((_,i)=>`<i class="${i===G.stage?'cur':(i<G.stage&&i>=(G.startStage||0))?'done':''}" title="第${NUMS[i]}關・${STAGES[i].name}"></i>`).join('');
   $('#hud-combo').textContent= G.combo>=2 ? `🔥 連擊 ×${G.combo}` : '';
 }
 function animateScore(to){
@@ -494,7 +498,7 @@ function stageYears(i){
 }
 function renderTitle(){
   $('#stage-map').innerHTML=STAGES.map((s,i)=>{ const [a,b]=stageYears(i);
-    return `<li style="animation-delay:${.6+i*.12}s"><span class="node">${NUMS[i]}</span><span class="sl">第${NUMS[i]}關</span><span class="sn">${s.name}</span><span class="sy">${a}–${b}</span></li>`; }).join('');
+    return `<li style="animation-delay:${.6+i*.12}s"><button type="button" class="stage-pick" data-stage="${i}" title="從第${NUMS[i]}關開始挑戰"><span class="node">${NUMS[i]}</span><span class="sl">第${NUMS[i]}關</span><span class="sn">${s.name}</span><span class="sy">${a}–${b}</span></button></li>`; }).join('');
   const logo=$('#logo'); logo.innerHTML=[...'苑史闖關'].map((c,i)=>`<span style="animation-delay:${.15+i*.12}s">${c}</span>`).join('');
   const bs=+store.get('best.stage')||0, bf=+store.get('best.full')||0;
   $('#full-sub').textContent=`每一條苑史紀錄一題・共 ${ENTRIES.length} 題`;
@@ -506,13 +510,14 @@ function renderTitle(){
   $('#btn-sound').textContent= muted ? '🔇 音效關' : '🔊 音效開';
 }
 $('#btn-start').onclick=()=>startGame('stage');
+$('#stage-map').addEventListener('click',ev=>{ const b=ev.target.closest('.stage-pick'); if (b) startGame('stage', +b.dataset.stage); });
 $('#btn-full').onclick=()=>startGame('full');
 $('#btn-sound').onclick=()=>{ muted=!muted; store.set('muted',muted?'1':'0'); renderTitle(); sfx.click(); };
 $('#btn-reload').onclick=async()=>{ show('scr-loading'); await loadData(); renderTitle(); show('scr-title'); };
 $('#btn-next').onclick=next;
 if (fsSupported) $('#btn-fs').onclick=toggleFS; else $('#btn-fs').style.display='none';
 $('#btn-quit').onclick=()=>{ if (G.over) return; if (confirm('確定要結束這次挑戰嗎？')){ cancelAnimationFrame(timerRAF); finish(false); } };
-$('#btn-again').onclick=()=>startGame(G.mode);
+$('#btn-again').onclick=()=>startGame(G.mode, G.startStage||0);
 $('#btn-home').onclick=()=>{ sfx.click(); renderTitle(); show('scr-title'); };
 addEventListener('keydown',ev=>{
   if (!$('#scr-game').classList.contains('active') || $('#banner').classList.contains('show')) return;
