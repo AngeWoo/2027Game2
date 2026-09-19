@@ -21,7 +21,8 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overscroll-behavior:none}
-html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow-x:hidden}
+main{overflow-x:clip}
 button{touch-action:manipulation;-webkit-user-select:none;user-select:none}
 body{
   font-family:'Noto Sans TC','Microsoft JhengHei','PingFang TC',system-ui,sans-serif;color:var(--text);
@@ -122,6 +123,19 @@ main{position:relative;z-index:10;min-height:100vh;min-height:100dvh;display:fle
 .pbar{width:100%;height:5px;border-radius:9px;background:rgba(255,255,255,.08);margin:10px 0 18px;overflow:hidden}
 .pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--violet),var(--gold));box-shadow:0 0 12px var(--cyan);transition:width .6s cubic-bezier(.2,.8,.2,1)}
 .combo-chip{font-size:.72rem;color:var(--cyan);min-height:1em}
+/* ---------- 五大關卡地圖 ---------- */
+.stage-map{position:relative;list-style:none;display:grid;grid-template-columns:repeat(5,1fr);gap:6px;width:min(640px,100%);margin:26px auto 0;padding:0}
+.stage-map::before{content:"";position:absolute;left:10%;right:10%;top:21px;height:2px;background:linear-gradient(90deg,var(--cyan),var(--violet),var(--gold));opacity:.55;box-shadow:0 0 10px rgba(94,231,255,.5)}
+.stage-map li{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;animation:rise .7s cubic-bezier(.2,1.3,.3,1) backwards}
+.stage-map .node{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-weight:900;font-size:1.15rem;color:var(--gold-hi);
+  background:radial-gradient(circle at 35% 30%,#3a2a6e,#120e33);border:2px solid rgba(245,200,107,.7);box-shadow:0 0 16px rgba(245,200,107,.35),inset 0 0 10px rgba(245,200,107,.2)}
+.stage-map .sn{font-family:var(--serif);font-weight:900;font-size:.95rem;color:var(--gold);letter-spacing:.08em;white-space:nowrap;margin-top:2px}
+.stage-map .sl{font-size:.7rem;color:var(--cyan);letter-spacing:.15em}
+.stage-map .sy{font-size:.7rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.stage-dots{display:flex;gap:5px;margin-top:3px}
+.stage-dots i{width:18px;height:4px;border-radius:4px;background:rgba(255,255,255,.15);transition:all .4s}
+.stage-dots i.done{background:var(--gold);box-shadow:0 0 6px var(--gold)}
+.stage-dots i.cur{background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:blink 1.4s infinite}
 
 /* ---------- Question card ---------- */
 .stage3d{width:100%;perspective:1200px}
@@ -250,6 +264,12 @@ footer.src{position:relative;margin-top:22px;font-size:.72rem;color:#6d7299;text
   .logo{font-size:clamp(3rem,17vw,5rem)}
   .logo-sub{letter-spacing:.3em}
   .tagline{font-size:.9rem}
+  .stage-map{gap:2px;margin-top:18px}
+  .stage-map::before{top:17px}
+  .stage-map .node{width:36px;height:36px;font-size:.95rem}
+  .stage-map .sn{font-size:.78rem;letter-spacing:0}
+  .stage-map .sl{font-size:.62rem;letter-spacing:.05em}
+  .stage-map .sy{font-size:.6rem}
   .menu{margin-top:4vh;gap:12px}
   .howto{font-size:.8rem}
   .howto .br{display:block}
@@ -315,6 +335,7 @@ footer.src{position:relative;margin-top:22px;font-size:.72rem;color:#6d7299;text
       <h1 class="logo" id="logo">苑史闖關</h1>
       <div class="logo-sub">穿越時光 · 傳承法流</div>
       <p class="tagline">從 1936 年立教的曙光出發，<br>五大時代關卡，考驗你對苑史的記憶！</p>
+      <ol class="stage-map" id="stage-map" aria-label="五大關卡"></ol>
       <div style="display:flex;justify-content:center">
         <div class="menu">
           <button class="btn primary" id="btn-start">⚔ 開始闖關<small>五關 × 8 題　限時作答　3 顆心</small></button>
@@ -336,6 +357,7 @@ footer.src{position:relative;margin-top:22px;font-size:.72rem;color:#6d7299;text
       <div class="hud-left">
         <div class="stage-name" id="hud-stage">第一關</div>
         <div class="q-count" id="hud-count">第 1 / 8 題</div>
+        <div class="stage-dots" id="hud-dots"></div>
         <div class="combo-chip" id="hud-combo"></div>
       </div>
       <div class="hearts" id="hud-hearts"></div>
@@ -400,6 +422,6 @@ footer.src{position:relative;margin-top:22px;font-size:.72rem;color:#6d7299;text
 <div id="banner"><div class="wheel" data-wheel></div><div class="b-inner" id="banner-inner"></div></div>
 
 <script src="data-fallback.js?v=1"></script>
-<script src="game.js?v=8"></script>
+<script src="game.js?v=10"></script>
 </body>
 </html>

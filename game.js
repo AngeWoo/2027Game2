@@ -4,14 +4,14 @@
    ========================================================= */
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSELNOgRozrKO1bscsHe6doF8rH9-wSPYgvkhR5xXGhHKYvKoiXnlEC8YR3G5pPwQ2YFOksnlxYAQx-/pub?gid=0&single=true&output=csv';
 const STAGES = [
-  { name:'草創之始', from:0,    to:1949, time:25, types:['year','event','blank'] },
-  { name:'苑基開展', from:1950, to:1969, time:23, types:['year','event','blank'] },
-  { name:'法流相承', from:1970, to:1989, time:21, types:['year','event','blank','date'] },
-  { name:'繼往開來', from:1990, to:2009, time:19, types:['year','event','blank','date'] },
-  { name:'永恆燈火', from:2010, to:9999, time:17, types:['year','event','blank','date'] },
+  { name:'草創之始', from:0,    to:1949, time:35, types:['year','event','blank'] },
+  { name:'苑基開展', from:1950, to:1969, time:32, types:['year','event','blank'] },
+  { name:'法流相承', from:1970, to:1989, time:30, types:['year','event','blank','date'] },
+  { name:'繼往開來', from:1990, to:2009, time:28, types:['year','event','blank','date'] },
+  { name:'永恆燈火', from:2010, to:9999, time:25, types:['year','event','blank','date'] },
 ];
 const NUMS = ['一','二','三','四','五','六','七','八','九','十'];
-const Q_PER_STAGE = 8, START_LIVES = 3, MAX_LIVES = 5, FULL_TIME = 25;
+const Q_PER_STAGE = 8, START_LIVES = 3, MAX_LIVES = 5, FULL_TIME = 35;
 const TYPE_LABEL = { year:'年代推理', event:'時光定格', blank:'填空解謎', date:'精準日期' };
 
 const $ = s => document.querySelector(s);
@@ -335,7 +335,7 @@ function enterStage(i){
   G.stage=i; G.qi=0;
   G.queue=shuffle(stageEntries(i)).slice(0,Q_PER_STAGE);
   const s=STAGES[i], list=stageEntries(i);
-  const y0=list.length?Math.min(...list.map(e=>e.y)):s.from, y1=list.length?Math.max(...list.map(e=>e.y)):s.to;
+  const [y0,y1]=stageYears(i);
   renderHUD(); $('#pbar').style.width='0%';
   sfx.stage();
   banner(`<div class="b-kicker">STAGE ${i+1}</div><div class="b-title">${slamLetters('第'+NUMS[i]+'關')}</div><div class="b-sub">${s.name}</div><div class="b-years">${y0} — ${y1}</div>`,2400)
@@ -348,6 +348,7 @@ function renderHUD(){
   $('#hud-count').textContent=`第 ${Math.min(G.qi+1,n)} / ${n} 題`;
   $('#hud-hearts').innerHTML= full ? '<span class="inf">∞ 練習模式</span>'
     : Array.from({length:Math.max(G.lives,START_LIVES)},(_,i)=>`<span class="h ${i<G.lives?'':'lost'}">♥</span>`).join('');
+  $('#hud-dots').innerHTML= full ? '' : STAGES.map((_,i)=>`<i class="${i<G.stage?'done':i===G.stage?'cur':''}" title="第${NUMS[i]}關・${STAGES[i].name}"></i>`).join('');
   $('#hud-combo').textContent= G.combo>=2 ? `🔥 連擊 ×${G.combo}` : '';
 }
 function animateScore(to){
@@ -487,7 +488,13 @@ function finish(cleared){
 /* =========================================================
    首頁 & 事件綁定
    ========================================================= */
+function stageYears(i){
+  const s=STAGES[i], list=stageEntries(i);
+  return list.length ? [Math.min(...list.map(e=>e.y)), Math.max(...list.map(e=>e.y))] : [s.from, s.to];
+}
 function renderTitle(){
+  $('#stage-map').innerHTML=STAGES.map((s,i)=>{ const [a,b]=stageYears(i);
+    return `<li style="animation-delay:${.6+i*.12}s"><span class="node">${NUMS[i]}</span><span class="sl">第${NUMS[i]}關</span><span class="sn">${s.name}</span><span class="sy">${a}–${b}</span></li>`; }).join('');
   const logo=$('#logo'); logo.innerHTML=[...'苑史闖關'].map((c,i)=>`<span style="animation-delay:${.15+i*.12}s">${c}</span>`).join('');
   const bs=+store.get('best.stage')||0, bf=+store.get('best.full')||0;
   $('#full-sub').textContent=`每一條苑史紀錄一題・共 ${ENTRIES.length} 題`;
